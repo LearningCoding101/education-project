@@ -1,0 +1,279 @@
+﻿@page "/test-auth"
+@using EducationCourse.Services.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+@using EducationCourse.Models.Auth
+@using System.ComponentModel.DataAnnotations
+@using FluentResults
+@using System.Security.Claims
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Test Authentication</PageTitle>
+
+<h3>Test Authentication and Authorization</h3>
+
+<AuthorizeView>
+    <Authorized Context="mainContext">
+        <p>Welcome, @mainContext.User.Identity?.Name!</p>
+        <p>Your role is: @mainContext.User.FindFirst(ClaimTypes.Role)?.Value</p>
+
+        <button class="btn btn-danger" @onclick="HandleLogout" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span>Logging out...</span>
+            }
+            else
+            {
+                <span>Logout</span>
+            }
+        </button>
+
+        <h4>Role-Based Content</h4>
+        <AuthorizeView Roles="student">
+            <Authorized Context="studentContext">
+                <p>This content is only visible to students.</p>
+            </Authorized>
+            <NotAuthorized Context="studentNotAuthContext">
+                <p>You are not a student.</p>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="teacher">
+            <Authorized Context="teacherContext">
+                <p>This content is only visible to teachers.</p>
+            </Authorized>
+            <NotAuthorized Context="teacherNotAuthContext">
+                <p>You are not a teacher.</p>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="admin">
+            <Authorized Context="adminContext">
+                <p>This content is only visible to admins.</p>
+            </Authorized>
+            <NotAuthorized Context="adminNotAuthContext">
+                <p>You are not an admin.</p>
+            </NotAuthorized>
+        </AuthorizeView>
+    </Authorized>
+    <NotAuthorized Context="mainNotAuthContext">
+        <div class="auth-forms">
+            <div class="register-form">
+                <h4>Register</h4>
+                @if (!string.IsNullOrEmpty(RegisterError))
+                {
+                    <div class="alert alert-danger">@RegisterError</div>
+                }
+
+                <EditForm Model="@RegisterModel" FormName="RegisterForm" OnValidSubmit="HandleRegister">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <InputText id="register-email"
+                                   class="form-control"
+                                   @bind-Value="RegisterModel.Email" />
+                        <ValidationMessage For="@(() => RegisterModel.Email)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <InputText id="register-password"
+                                   class="form-control"
+                                   type="password"
+                                   @bind-Value="RegisterModel.Password" />
+                        <ValidationMessage For="@(() => RegisterModel.Password)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-firstname">First Name</label>
+                        <InputText id="register-firstname"
+                                   class="form-control"
+                                   @bind-Value="RegisterModel.FirstName" />
+                        <ValidationMessage For="@(() => RegisterModel.FirstName)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-lastname">Last Name</label>
+                        <InputText id="register-lastname"
+                                   class="form-control"
+                                   @bind-Value="RegisterModel.LastName" />
+                        <ValidationMessage For="@(() => RegisterModel.LastName)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-role">Role</label>
+                        <InputSelect id="register-role"
+                                     class="form-control"
+                                     @bind-Value="RegisterModel.Role">
+                            <option value="">Select a role...</option>
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="admin">Admin</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => RegisterModel.Role)" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(RegisterError))
+                    {
+                        <div class="alert alert-danger">@RegisterError</div>
+                    }
+
+                    <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span>Registering...</span>
+                        }
+                        else
+                        {
+                            <span>Register</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+
+            <div class="login-form">
+                <h4>Login</h4>
+                <EditForm Model="@LoginModel" FormName="LoginForm" OnValidSubmit="HandleLogin">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <InputText id="login-email"
+                                   class="form-control"
+                                   @bind-Value="LoginModel.Email" />
+                        <ValidationMessage For="@(() => LoginModel.Email)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <InputText id="login-password"
+                                   class="form-control"
+                                   type="password"
+                                   @bind-Value="LoginModel.Password" />
+                        <ValidationMessage For="@(() => LoginModel.Password)" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(LoginError))
+                    {
+                        <div class="alert alert-danger">@LoginError</div>
+                    }
+
+                    <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span>Logging in...</span>
+                        }
+                        else
+                        {
+                            <span>Login</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+@code {
+    private RegisterModel RegisterModel = new();
+    private LoginModel LoginModel = new();
+    private bool isLoading;
+    private string? LoginError;
+    private string? RegisterError;
+    private string debugMessage = "";  // Variable to store debug message for UI
+
+    private async Task HandleRegister()
+    {
+        try
+        {
+            debugMessage = "Calling HandleRegister...";  // Set message to show on the page
+            Console.WriteLine("Calling HandleRegister...");  // Log to browser console
+
+            isLoading = true;
+            RegisterError = null;
+
+
+
+            var result = await AuthService.RegisterAsync(RegisterModel, RegisterModel.Role);
+            if (result.IsSuccess)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                RegisterError = result.Errors.FirstOrDefault()?.Message ?? "Registration failed";
+                Console.WriteLine(RegisterError); // Log to console
+            }
+        }
+        catch (Exception ex)
+        {
+            RegisterError = "An unexpected error occurred";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            debugMessage = "Calling HandleLogin...";  // Set message to show on the page
+            Console.WriteLine("Calling HandleLogin...");  // Log to browser console
+
+            isLoading = true;
+            LoginError = null;
+
+            // Ensure user is logged out before login
+            await PerformLogoutAsync();
+
+            var result = await AuthService.LoginAsync(LoginModel.Email, LoginModel.Password);
+            if (result.IsSuccess)
+            {
+                await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                Navigation.NavigateTo("/test-auth");
+            }
+            else
+            {
+                LoginError = result.Errors.FirstOrDefault()?.Message ?? "Login failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            LoginError = "An unexpected error occurred";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        try
+        {
+            debugMessage = "Calling HandleLogout...";  // Set message to show on the page
+            Console.WriteLine("Calling HandleLogout...");  // Log to browser console
+
+            isLoading = true;
+            await PerformLogoutAsync();
+            Navigation.NavigateTo("/test-auth");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task PerformLogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+    }
+}
