@@ -1,5 +1,7 @@
 ﻿@page "/test-auth"
 @using EducationCourse.Services.Auth
+@using EducationCourse.Components.Layout
+
 @using Microsoft.AspNetCore.Components.Authorization
 @using EducationCourse.Models.Auth
 @using System.ComponentModel.DataAnnotations
@@ -12,116 +14,118 @@
 <PageTitle>Test Authentication</PageTitle>
 
 <h3>Test Authentication and Authorization</h3>
+<LayoutView Layout="@typeof(MainLayout)">
+    <AuthorizeView>
+        <Authorized Context="mainContext">
+            <p>Welcome, @mainContext.User.Identity?.Name!</p>
+            <p>Your role is: @mainContext.User.FindFirst(ClaimTypes.Role)?.Value</p>
 
-<AuthorizeView>
-    <Authorized Context="mainContext">
-        <p>Welcome, @mainContext.User.Identity?.Name!</p>
-        <p>Your role is: @mainContext.User.FindFirst(ClaimTypes.Role)?.Value</p>
-
-        <button class="btn btn-danger" @onclick="HandleLogout" disabled="@isLoading">
-            @if (isLoading)
-            {
-                <span>Logging out...</span>
-            }
-            else
-            {
-                <span>Logout</span>
-            }
-        </button>
-
-        <h4>Role-Based Content</h4>
-        <AuthorizeView Roles="student">
-            <Authorized Context="studentContext">
-                <p>This content is only visible to students.</p>
-            </Authorized>
-            <NotAuthorized Context="studentNotAuthContext">
-                <p>You are not a student.</p>
-            </NotAuthorized>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="teacher">
-            <Authorized Context="teacherContext">
-                <p>This content is only visible to teachers.</p>
-            </Authorized>
-            <NotAuthorized Context="teacherNotAuthContext">
-                <p>You are not a teacher.</p>
-            </NotAuthorized>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="admin">
-            <Authorized Context="adminContext">
-                <p>This content is only visible to admins.</p>
-            </Authorized>
-            <NotAuthorized Context="adminNotAuthContext">
-                <p>You are not an admin.</p>
-            </NotAuthorized>
-        </AuthorizeView>
-    </Authorized>
-    <NotAuthorized Context="mainNotAuthContext">
-        <div class="auth-forms">
-            <div class="register-form">
-                <h4>Register</h4>
-                @if (!string.IsNullOrEmpty(RegisterError))
+            <button class="btn btn-danger" @onclick="HandleLogout" disabled="@isLoading">
+                @if (isLoading)
                 {
-                    <div class="alert alert-danger">@RegisterError</div>
+                    <span>Logging out...</span>
                 }
+                else
+                {
+                    <span>Logout</span>
+                }
+            </button>
 
-                <EditForm Model="RegisterModel" FormName="please" OnValidSubmit="HandleRegister">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+            <h4>Role-Based Content</h4>
+            <AuthorizeView Roles="student">
+                <Authorized Context="studentContext">
+                    <p>This content is only visible to students.</p>
+                </Authorized>
+                <NotAuthorized Context="studentNotAuthContext">
+                    <p>You are not a student.</p>
+                </NotAuthorized>
+            </AuthorizeView>
 
-                    <div class="form-group">
-                        <label for="register-email">Email</label>
-                        <InputText id="register-email" class="form-control" @bind-Value="RegisterModel.Email" />
-                        <ValidationMessage For="@(() => RegisterModel.Email)" />
-                    </div>
+            <AuthorizeView Roles="teacher">
+                <Authorized Context="teacherContext">
+                    <p>This content is only visible to teachers.</p>
+                </Authorized>
+                <NotAuthorized Context="teacherNotAuthContext">
+                    <p>You are not a teacher.</p>
+                </NotAuthorized>
+            </AuthorizeView>
 
-                    <div class="form-group">
-                        <label for="register-password">Password</label>
-                        <InputText id="register-password" class="form-control" type="password" @bind-Value="RegisterModel.Password" />
-                        <ValidationMessage For="@(() => RegisterModel.Password)" />
-                    </div>
+            <AuthorizeView Roles="admin">
+                <Authorized Context="adminContext">
+                    <p>This content is only visible to admins.</p>
+                </Authorized>
+                <NotAuthorized Context="adminNotAuthContext">
+                    <p>You are not an admin.</p>
+                </NotAuthorized>
+            </AuthorizeView>
+        </Authorized>
+        <NotAuthorized Context="mainNotAuthContext">
+            <div class="auth-forms">
+                <div class="register-form">
+                    <h4>Register</h4>
+                    @if (!string.IsNullOrEmpty(RegisterError))
+                    {
+                        <div class="alert alert-danger">@RegisterError</div>
+                    }
 
-                    <div class="form-group">
-                        <label for="register-firstname">First Name</label>
-                        <InputText id="register-firstname" class="form-control" @bind-Value="RegisterModel.FirstName" />
-                        <ValidationMessage For="@(() => RegisterModel.FirstName)" />
-                    </div>
+                    <EditForm Model="RegisterModel" FormName="please" OnValidSubmit="HandleRegister">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
 
-                    <div class="form-group">
-                        <label for="register-lastname">Last Name</label>
-                        <InputText id="register-lastname" class="form-control" @bind-Value="RegisterModel.LastName" />
-                        <ValidationMessage For="@(() => RegisterModel.LastName)" />
-                    </div>
+                        <div class="form-group">
+                            <label for="register-email">Email</label>
+                            <InputText id="register-email" class="form-control" @bind-Value="RegisterModel.Email" />
+                            <ValidationMessage For="@(() => RegisterModel.Email)" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="register-role">Role</label>
-                        <InputSelect id="register-role" class="form-control" @bind-Value="RegisterModel.Role">
-                            <option value="">Select a role...</option>
-                            <option value="student">Student</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="admin">Admin</option>
-                        </InputSelect>
-                        <ValidationMessage For="@(() => RegisterModel.Role)" />
-                    </div>
+                        <div class="form-group">
+                            <label for="register-password">Password</label>
+                            <InputText id="register-password" class="form-control" type="password" @bind-Value="RegisterModel.Password" />
+                            <ValidationMessage For="@(() => RegisterModel.Password)" />
+                        </div>
 
-                    <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                        @if (isLoading)
-                        {
-                            <span>Registering...</span>
-                        }
-                        else
-                        {
-                            <span>Register</span>
-                        }
-                    </button>
-                </EditForm>
+                        <div class="form-group">
+                            <label for="register-firstname">First Name</label>
+                            <InputText id="register-firstname" class="form-control" @bind-Value="RegisterModel.FirstName" />
+                            <ValidationMessage For="@(() => RegisterModel.FirstName)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-lastname">Last Name</label>
+                            <InputText id="register-lastname" class="form-control" @bind-Value="RegisterModel.LastName" />
+                            <ValidationMessage For="@(() => RegisterModel.LastName)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-role">Role</label>
+                            <InputSelect id="register-role" class="form-control" @bind-Value="RegisterModel.Role">
+                                <option value="">Select a role...</option>
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="admin">Admin</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => RegisterModel.Role)" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span>Registering...</span>
+                            }
+                            else
+                            {
+                                <span>Register</span>
+                            }
+                        </button>
+                    </EditForm>
+                </div>
+
+
             </div>
+        </NotAuthorized>
+    </AuthorizeView>
 
-            
-        </div>
-    </NotAuthorized>
-</AuthorizeView>
+</LayoutView>
 
 @code {
     [SupplyParameterFromForm]
