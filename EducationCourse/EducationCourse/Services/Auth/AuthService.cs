@@ -34,7 +34,7 @@ namespace EducationCourse.Services.Auth
 
         }
 
-        public async Task<Result> LoginAsync( string email, string password)
+        public async Task<Result> LoginAsync(string email, string password)
         {
             try
             {
@@ -48,7 +48,8 @@ namespace EducationCourse.Services.Auth
                 await _localStorage.SetAsync(RefreshToken, response.RefreshToken);
 
                 return Result.Ok();
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 var error = JsonSerializer.Deserialize<AuthError>(ex.Message);
 
@@ -151,8 +152,8 @@ namespace EducationCourse.Services.Auth
         {
             await RemoveAuthDataFromStorageAsync();
             Thread.Sleep(300);
-            _navigation.NavigateTo("/", true);
-        }
+/*            _navigation.NavigateTo("/", true);
+*/        }
 
         public async Task<List<Claim>> GetLoginInfoAsync()
         {

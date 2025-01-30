@@ -5,6 +5,7 @@ using EducationCourse.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MudBlazor.Services;
 
 namespace EducationCourse
 {
@@ -21,7 +22,7 @@ namespace EducationCourse
 
 
             //register service
-
+            builder.Services.AddMudServices();
             // Authenticated services
             builder.Services.AddTransient<AuthService>();
             builder.Services.AddTransient<UserService>();
