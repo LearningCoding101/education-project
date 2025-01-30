@@ -35,12 +35,4 @@
     <Folder Include="Components\Shared\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="wwwroot\js\bootstrap.bundle.min.js" />
-    <None Include="wwwroot\js\click-scroll.js" />
-    <None Include="wwwroot\js\custom.js" />
-    <None Include="wwwroot\js\jquery.min.js" />
-    <None Include="wwwroot\js\jquery.sticky.js" />
-  </ItemGroup>
-
 </Project>
