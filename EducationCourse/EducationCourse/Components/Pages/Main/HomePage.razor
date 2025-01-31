@@ -1,0 +1,151 @@
+﻿@page "/"
+@inject NavigationManager Navigation
+
+<MudThemeProvider />
+<MudLayout>
+    <MudAppBar Elevation="4" Dense="true" Color="Color.Primary">
+        <MudText Typo="Typo.h6" Class="ml-4">Education</MudText>
+        <MudSpacer />
+        <div class="d-flex align-center">
+            <MudButton Class="mx-2" Color="Color.Inherit" Href="/">Home</MudButton>
+            <MudButton Class="mx-2" Color="Color.Inherit" Href="/about">About Us</MudButton>
+            <MudButton Class="mx-2" Color="Color.Inherit" Href="/training">Training</MudButton>
+            <MudButton Class="mx-2" Color="Color.Inherit" Href="/projects">Projects</MudButton>
+            <MudButton Class="mx-2" Color="Color.Inherit" Href="/news">News</MudButton>
+            <MudButton Class="mx-2" Color="Color.Inherit" Href="/contact">Contact</MudButton>
+        </div>
+        <MudSpacer />
+        <MudButton Class="mr-4" Variant="Variant.Filled" Color="Color.Secondary" @onclick="OnLoginClick">
+            Login
+        </MudButton>
+    </MudAppBar>
+
+    <MudMainContent>
+        <!-- Hero Section -->
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h2" Class="mb-4">Welcome to Education Institute</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Secondary" Class="mb-4">
+                        Empowering Knowledge, Inspiring Innovation
+                    </MudText>
+                    <MudText Class="mb-8">
+                        Join our community of learners and innovators. Discover world-class training programs
+                        and research opportunities.
+                    </MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                              Href="/training">
+                        Explore Courses
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="d-flex justify-center align-center">
+                    <MudImage Src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOjcdOPQZHxlwk8wgQERQoaLQbCiaoCO1vzw&s" Alt="Education" Class="rounded-lg" />
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <!-- Featured Courses Section -->
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+            <MudText Typo="Typo.h4" Class="mb-8">Featured Courses</MudText>
+            <MudGrid>
+                @foreach (var course in featuredCourses)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudCard>
+                            <MudCardMedia Image="@course.Image" Height="200" />
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">@course.Title</MudText>
+                                <MudText Typo="Typo.body2">@course.Description</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                          Href="@($"/course/{course.Id}")">
+                                    Learn More
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudContainer>
+
+        <!-- News & Events Section -->
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16 mb-16">
+            <MudText Typo="Typo.h4" Class="mb-8">Latest News & Events</MudText>
+            <MudGrid>
+                @foreach (var news in latestNews)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-4" Elevation="2">
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">@news.Title</MudText>
+                            <MudText Typo="Typo.body2" Class="mb-4">@news.Description</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@news.Date</MudText>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudContainer>
+    </MudMainContent>
+
+    <MudFooter Class="pa-8">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudGrid>
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Contact Us</MudText>
+                    <MudText Typo="Typo.body2">123 Education Street</MudText>
+                    <MudText Typo="Typo.body2">Ho Chi Minh City, Vietnam</MudText>
+                    <MudText Typo="Typo.body2">Email: info@institute.edu.vn</MudText>
+                    <MudText Typo="Typo.body2">Phone: +84 123 456 789</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Quick Links</MudText>
+                    <MudLink Href="/about" Color="Color.Inherit">About Us</MudLink><br />
+                    <MudLink Href="/training" Color="Color.Inherit">Training Programs</MudLink><br />
+                    <MudLink Href="/projects" Color="Color.Inherit">Projects</MudLink><br />
+                    <MudLink Href="/contact" Color="Color.Inherit">Contact</MudLink>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Newsletter</MudText>
+                    <MudTextField T="string" Label="Email" Variant="Variant.Outlined" Class="mb-2" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary">Subscribe</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </MudFooter>
+</MudLayout>
+
+@code {
+    private void OnLoginClick()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private List<CourseModel> featuredCourses = new()
+    {
+        new CourseModel { Id = 1, Title = "Data Science Fundamentals", Description = "Learn the basics of data science and analytics", Image = "/images/course1.jpg" },
+        new CourseModel { Id = 2, Title = "Machine Learning", Description = "Master machine learning algorithms and applications", Image = "/images/course2.jpg" },
+        new CourseModel { Id = 3, Title = "Web Development", Description = "Build modern web applications from scratch", Image = "/images/course3.jpg" }
+    };
+
+    private List<NewsModel> latestNews = new()
+    {
+        new NewsModel { Title = "New Research Partnership", Description = "Announcing our new partnership with Tech Industries", Date = "March 15, 2024" },
+        new NewsModel { Title = "Student Achievement", Description = "Our students won the National Innovation Competition", Date = "March 10, 2024" },
+        new NewsModel { Title = "Upcoming Workshop", Description = "Join our AI Workshop this weekend", Date = "March 5, 2024" }
+    };
+
+    public class CourseModel
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Image { get; set; }
+    }
+
+    public class NewsModel
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
+    }
+}

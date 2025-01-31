@@ -1,0 +1,259 @@
+﻿@page "/login"
+@using EducationCourse.Services.Auth
+@using EducationCourse.Components.Layout
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using EducationCourse.Models.Auth
+@using System.ComponentModel.DataAnnotations
+@using FluentResults
+@using System.Security.Claims
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudThemeProvider />
+
+<div class="d-flex justify-center align-center" style="min-height: 100vh; background-color: #f5f5f5;">
+    <MudPaper Elevation="3" Class="pa-8" Style="width: 500px;">
+        <AuthorizeView>
+            <Authorized>
+                <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">
+                    Welcome, @context.User.Identity?.Name!
+                </MudText>
+                <MudText Align="Align.Center" Class="mb-4">
+                    Role: @context.User.FindFirst(ClaimTypes.Role)?.Value
+                </MudText>
+                <MudButton Variant="Variant.Filled" 
+                          Color="Color.Error" 
+                          FullWidth="true"
+                          OnClick="HandleLogout"
+                          Disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                        <MudText Class="ms-2">Logging out...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Logout</MudText>
+                    }
+                </MudButton>
+            </Authorized>
+            <NotAuthorized>
+                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                    <MudTabPanel Text="Register">
+                        <MudForm @ref="form" Model="@RegisterModel">
+                            @if (!string.IsNullOrEmpty(RegisterError))
+                            {
+                                <MudAlert Severity="Severity.Error" Class="mb-4">@RegisterError</MudAlert>
+                            }
+
+                            <MudTextField @bind-Value="RegisterModel.Email"
+                                        Label="Email"
+                                        Required="true"
+                                        RequiredError="Email is required!"
+                                        Validation="@(new EmailAddressAttribute() {ErrorMessage = "Invalid email address"})"
+                                        Class="mb-4"/>
+
+                            <MudTextField @bind-Value="RegisterModel.Password"
+                                        Label="Password"
+                                        Required="true"
+                                        RequiredError="Password is required!"
+                                        InputType="@passwordInput"
+                                        Adornment="Adornment.End"
+                                        AdornmentIcon="@passwordInputIcon"
+                                        OnAdornmentClick="TogglePasswordVisibility"
+                                        Class="mb-4"/>
+
+                            <MudTextField @bind-Value="RegisterModel.FirstName"
+                                        Label="First Name"
+                                        Required="true"
+                                        RequiredError="First name is required!"
+                                        Class="mb-4"/>
+
+                            <MudTextField @bind-Value="RegisterModel.LastName"
+                                        Label="Last Name"
+                                        Required="true"
+                                        RequiredError="Last name is required!"
+                                        Class="mb-4"/>
+
+                            <MudSelect T="string" Label="Role" 
+                                     @bind-Value="RegisterModel.Role"
+                                     Required="true"
+                                     RequiredError="Role is required!"
+                                     Class="mb-6">
+                                <MudSelectItem Value="@("student")">Student</MudSelectItem>
+                                <MudSelectItem Value="@("teacher")">Teacher</MudSelectItem>
+                                <MudSelectItem Value="@("admin")">Admin</MudSelectItem>
+                            </MudSelect>
+
+                            <MudButton Variant="Variant.Filled"
+                                      Color="Color.Primary"
+                                      FullWidth="true"
+                                      OnClick="HandleRegister"
+                                      Disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                                    <MudText Class="ms-2">Registering...</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Register</MudText>
+                                }
+                            </MudButton>
+                        </MudForm>
+                    </MudTabPanel>
+                    <MudTabPanel Text="Login">
+                        <MudForm @ref="loginForm" Model="@LoginModel">
+                            @if (!string.IsNullOrEmpty(LoginError))
+                            {
+                                <MudAlert Severity="Severity.Error" Class="mb-4">@LoginError</MudAlert>
+                            }
+
+                            <MudTextField @bind-Value="LoginModel.Email"
+                                        Label="Email"
+                                        Required="true"
+                                        RequiredError="Email is required!"
+                                        Class="mb-4"/>
+
+                            <MudTextField @bind-Value="LoginModel.Password"
+                                        Label="Password"
+                                        Required="true"
+                                        RequiredError="Password is required!"
+                                        InputType="@passwordInput"
+                                        Adornment="Adornment.End"
+                                        AdornmentIcon="@passwordInputIcon"
+                                        OnAdornmentClick="TogglePasswordVisibility"
+                                        Class="mb-6"/>
+
+                            <MudButton Variant="Variant.Filled"
+                                      Color="Color.Primary"
+                                      FullWidth="true"
+                                      OnClick="HandleLogin"
+                                      Disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                                    <MudText Class="ms-2">Logging in...</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Login</MudText>
+                                }
+                            </MudButton>
+                        </MudForm>
+                    </MudTabPanel>
+                </MudTabs>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudPaper>
+</div>
+
+@code {
+    private MudForm form;
+    private MudForm loginForm;
+    private RegisterModel RegisterModel { get; set; } = new();
+    private LoginModel LoginModel { get; set; } = new();
+    private bool isLoading;
+    private string? LoginError;
+    private string? RegisterError;
+
+    // Password visibility toggle
+    private bool isShow;
+    private InputType passwordInput = InputType.Password;
+    private string passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private void TogglePasswordVisibility()
+    {
+        if (isShow)
+        {
+            isShow = false;
+            passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            passwordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            passwordInputIcon = Icons.Material.Filled.Visibility;
+            passwordInput = InputType.Text;
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            try
+            {
+                isLoading = true;
+                RegisterError = null;
+
+                var result = await AuthService.RegisterAsync(RegisterModel, RegisterModel.Role);
+                if (result.IsSuccess)
+                {
+                    Navigation.NavigateTo("/");
+                }
+                else
+                {
+                    RegisterError = result.Errors.FirstOrDefault()?.Message ?? "Registration failed";
+                }
+            }
+            catch (Exception ex)
+            {
+                RegisterError = "An unexpected error occurred during registration.";
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        await loginForm.Validate();
+        if (loginForm.IsValid)
+        {
+            try
+            {
+                isLoading = true;
+                LoginError = null;
+
+                var result = await AuthService.LoginAsync(LoginModel.Email, LoginModel.Password);
+                if (result.IsSuccess)
+                {
+                    await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                    Navigation.NavigateTo("/");
+                }
+                else
+                {
+                    LoginError = result.Errors.FirstOrDefault()?.Message ?? "Login failed";
+                }
+            }
+            catch (Exception ex)
+            {
+                LoginError = "An unexpected error occurred during login.";
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        try
+        {
+            isLoading = true;
+            await AuthService.LogoutAsync();
+            Navigation.NavigateTo("/login");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
